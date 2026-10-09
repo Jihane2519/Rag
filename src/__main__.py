@@ -99,28 +99,144 @@ class RAG:
         student_search_results_path: str,
         save_directory: str = "data/output/search_results_and_answer"
     ) -> None:
-        # with open(student_search_results_path, "r") as f:
-        #     data = json.load(f)
-        #     search_results = StudentSearchResults(**data)
-        #     bm25, all_chunks, texts = load_index()
-        #     generator = Generator()
-        # for result in tqdm(
-        #     search_results.search_results,
-        #     desc="Generating answers"
-        # ):
-    def evaluate(self, student_search_results_path, dataset_path)
+        """
+        Génère les réponses pour un dataset et sauvegarde les résultats.
+
+        Args:
+            student_search_results_path: chemin vers StudentSearchResults JSON
+            save_directory: dossier de sauvegarde
+        """
+        try:
+            with open(student_search_results_path, "r") as f:
+                data = json.load(f)
+            search_results = StudentSearchResults(**data)
+        except Exception as e:
+            print(f"Error loading search results: {e}")
+            return
+        # 2. charger index et générateur UNE seule fois
+        bm25, all_chunks, texts = load_index()
+        generator = Generator()
+        # 3. générer les réponses
+        all_answers = []
+        for result in tqdm(search_results.search_results, desc="Generating answers"):
+            ans = generator.generate_answer(
+                result.question,
+                result.retrieved_answer,
+                texts,
+                all_chunks
+            )
+            all_answers.append(MinimalAnswer(
+                question_id=result.question_id,
+                question=result.question,
+                retrieved_sources=result.retrieved_sources,
+                answer=ans
+            ))
+        # 4. sauvegarder
+        output = StudentSearchResultsAndAnswer(
+            search_results=all_answers,
+            k=search_results.k
+        )
+        os.makedirs(save_directory, exist_ok=True)
+        filename = os.path.basename(student_search_results_path)
+        save_path = os.path.join(save_directory, filename)
+        with open(save_path, "w") as f:
+            f.write(output.model_dump_json(indent=2))
+        print(f"Saved student_search_results_and_answer to {save_path}")
+
+    def evaluate(
+        self,
+        student_search_results_path: str,
+        dataset_path: str
+        ) -> None:
+        """
+        mesurer la qualité de ton Retriever, en calculant le Recall@k
+
+        student_search_results_path: str
+        C'est le chemin du fichier contenant les résultats obtenus par ton système.
+
+        dataset_path: str
+        C'est le chemin vers le dataset de référence,
+        qui contient les questions et leurs sources correctes.
+
+        """
+        # 1.charger tes resultats
+        try:
+            with open(student_search_results_path, "r") as f:
+                student_data = json.load(f)
+                student_results = StudentSearchResults(**student_data)
+        except Exception as e:
+            print(f"Error loading student results: {e}")
+            return
+        # 2. charger le dataset de reference
+        try:
+            with open(dataset_path, "r") as f:
+                ref_data = json.load(f)
+            ref_dataset = RagDataset(**ref_data)
+        except Exception as e:
+            print(f"Error loading reference dataset: {e}")
+            return
+        # 3. construire un dict question_id -> vraies sources
+        ref_dict: dict[str, AnsweredQuestion] = {}
+        for q in ref_dataset.rag_questions:
+            if isinstance(q, AnsweredQuestion):
+                ref_dict[q.question_id] = q
+        k = student_results.k
+        total_recall = 0.0
+        count = 0
+        for result in student_results.search_results:
+            if result.question_id not in ref_dict:
+                continue
+            ref_q = ref_dict[result.question_id]
+            found = 0
+            for ref_sources in ref_q.sources:
+                for student_source in result.retrieved_sources
+                    if student_source.file_path != ref_source.file_path:
+                        continue
+                    inter_start = max(
+                        student_source.first_character_index,
+                        ref_source.first_character_index
+                    )
+                    inter_end = min(
+                        student_source.last_character_index,
+                        ref_source.last_character_index
+                    )
+                    inter = max(0, inter_end - inter_start)
+                    union = (
+                        student_source.last_character_index
+                        - student_source.first_character_index
+                        + ref_source.last_character_index
+                        - ref_source.first_character_index
+                        - inter
+                    )
+                    #IoU (Intersection over Union)
+                    IoU = inter / union if union > 0 else 0
+                    # Si au moins 5% du contenu est considéré comme commun, on considère 
+                    # que la source trouvée correspond à la source de référence.
+                    if IoU > 0.05:
+                        found += 1
+                        # Une fois qu'on a trouvé une source 
+                        # de référence qui correspond à une source retrouvée
+                        break
+            recall = found / len(ref_q.sources) if ref_q.sources else 0
+            total_recall += recall
+            count += 1
+        avg_recall = total_recall / count if count > 0 else 0
+        print(f"Recall@{k}: {avg_recall:.3f} ({avg_recall * 100:.1f}%)")
 
 
+
+
+                
 if __name__== "__main__":
-    # fire.Fire(RAG)
-    with open("/goinfre/jbounou/rag/tester/test.md", "r") as e:
-        res = e.read()
-    chunks = chunk_file("/goinfre/jbounou/rag/test", res, 100)
-    build_index(1000)
-    meilleur = search("What is BM25 used for?", 1)
-    start = meilleur[0].first_character_index
-    end = meilleur[0].last_character_index
-    print(res[start:end])
+    fire.Fire(RAG)
+    # with open("/goinfre/jbounou/rag/tester/test.md", "r") as e:
+    #     res = e.read()
+    # chunks = chunk_file("/goinfre/jbounou/rag/test", res, 100)
+    # build_index(1000)
+    # meilleur = search("What is BM25 used for?", 1)
+    # start = meilleur[0].first_character_index
+    # end = meilleur[0].last_character_index
+    # print(res[start:end])
     # print(res)
 # def main() -> None:
 #     print("RAG against the machine")

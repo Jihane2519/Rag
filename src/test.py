@@ -1,90 +1,259 @@
-# src/generator.py
+# src/__main__.py
 
-from transformers import AutoTokenizer, AutoModelForCausalLM
-import torch
-from src.models import MinimalSource
+import json
+import os
+from tqdm import tqdm
+import fire
 
-MODEL_NAME = "Qwen/Qwen3-0.6B"
+from src.models import (
+    MinimalSource,
+    MinimalSearchResults,
+    MinimalAnswer,
+    StudentSearchResults,
+    StudentSearchResultsAndAnswer,
+    RagDataset,
+    UnansweredQuestion,
+    AnsweredQuestion,
+)
+from src.indexer import build_index, load_index
+from src.retriever import search
+from src.generator import Generator
 
 
-class Generator:
-    """Gère le chargement et l'utilisation du modèle Qwen3."""
+class RAG:
+    """CLI principal du système RAG."""
 
-    def __init__(self) -> None:
-        """Initialise le générateur et charge le modèle."""
-        print(f"Loading model {MODEL_NAME}...")
-        self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            MODEL_NAME,
-            torch_dtype=torch.float32  # CPU friendly
-        )
-        self.model.eval()
-        print("Model loaded!")
-
-    def generate_answer(
-        self,
-        question: str,
-        chunks: list[MinimalSource],
-        texts: list[str],
-        all_chunks: list[MinimalSource]
-    ) -> str:
+    def index(self, max_chunk_size: int = 2000) -> None:
         """
-        Génère une réponse à partir de la question et des chunks récupérés.
+        Ingeste data/raw/ et construit l'index sous data/processed/.
 
         Args:
-            question: la question posée
-            chunks: les MinimalSource trouvés par le retriever
-            texts: tous les textes indexés
-            all_chunks: tous les chunks indexés
-
-        Returns:
-            la réponse générée par Qwen3
+            max_chunk_size: taille max d'un chunk en caractères
         """
-        # 1. construire le contexte à partir des chunks trouvés
-        context_parts = []
-        for chunk in chunks:
-            for i, c in enumerate(all_chunks):
-                if (c.file_path == chunk.file_path and
-                        c.first_character_index == chunk.first_character_index):
-                    context_parts.append(
-                        f"Source: {c.file_path}\n{texts[i]}"
-                    )
-                    break
+        build_index(max_chunk_size)
 
-        context = "\n\n---\n\n".join(context_parts)
+    def search(self, query: str, k: int = 5) -> None:
+        """
+        Retourne les top-k sources pour une seule query.
 
-        # 2. construire le prompt
-        prompt = f"""Answer the question based on the context below.
+        Args:
+            query: la question
+            k: nombre de résultats
+        """
+        if not query:
+            print("Error: query is empty")
+            return
+        if k <= 0:
+            print("Error: k must be > 0")
+            return
 
-Context:
-{context}
+        results = search(query, k)
+        for r in results:
+            print(f"{r.file_path} [{r.first_character_index}:{r.last_character_index}]")
 
-Question: {question}
+    def search_dataset(
+        self,
+        dataset_path: str,
+        k: int = 5,
+        save_directory: str = "data/output/search_results"
+    ) -> None:
+        """
+        Lance la recherche sur tout un dataset et sauvegarde les résultats.
 
-Answer:"""
+        Args:
+            dataset_path: chemin vers le fichier JSON du dataset
+            k: nombre de résultats par question
+            save_directory: dossier de sauvegarde
+        """
+        # 1. charger le dataset
+        try:
+            with open(dataset_path, "r") as f:
+                data = json.load(f)
+            dataset = RagDataset(**data)
+        except Exception as e:
+            print(f"Error loading dataset: {e}")
+            return
 
-        # 3. tokenizer le prompt
-        inputs = self.tokenizer(
-            prompt,
-            return_tensors="pt",
-            truncation=True,
-            max_length=2048
-        )
+        # 2. chercher pour chaque question
+        all_results = []
+        for q in tqdm(dataset.rag_questions, desc="Searching"):
+            sources = search(q.question, k)
+            all_results.append(MinimalSearchResults(
+                question_id=q.question_id,
+                question=q.question,
+                retrieved_sources=sources
+            ))
 
-        # 4. générer la réponse
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs,
-                max_new_tokens=200,
-                do_sample=False,  # réponse déterministe
-                pad_token_id=self.tokenizer.eos_token_id
+        # 3. sauvegarder
+        output = StudentSearchResults(search_results=all_results, k=k)
+        os.makedirs(save_directory, exist_ok=True)
+        filename = os.path.basename(dataset_path)
+        save_path = os.path.join(save_directory, filename)
+
+        with open(save_path, "w") as f:
+            f.write(output.model_dump_json(indent=2))
+
+        print(f"Saved student_search_results to {save_path}")
+
+    def answer(self, query: str, k: int = 5) -> None:
+        """
+        Répond à une seule question en utilisant le contexte récupéré.
+
+        Args:
+            query: la question
+            k: nombre de sources à récupérer
+        """
+        if not query:
+            print("Error: query is empty")
+            return
+        if k <= 0:
+            print("Error: k must be > 0")
+            return
+
+        # charger index + chercher + générer
+        bm25, all_chunks, texts = load_index()
+        chunks = search(query, k)
+        generator = Generator()
+        ans = generator.generate_answer(query, chunks, texts, all_chunks)
+        print(f"Answer: {ans}")
+
+    def answer_dataset(
+        self,
+        student_search_results_path: str,
+        save_directory: str = "data/output/search_results_and_answer"
+    ) -> None:
+        """
+        Génère les réponses pour un dataset et sauvegarde les résultats.
+
+        Args:
+            student_search_results_path: chemin vers StudentSearchResults JSON
+            save_directory: dossier de sauvegarde
+        """
+        # 1. charger les search results
+        try:
+            with open(student_search_results_path, "r") as f:
+                data = json.load(f)
+            search_results = StudentSearchResults(**data)
+        except Exception as e:
+            print(f"Error loading search results: {e}")
+            return
+
+        # 2. charger index et générateur UNE seule fois
+        bm25, all_chunks, texts = load_index()
+        generator = Generator()
+
+        # 3. générer les réponses
+        all_answers = []
+        for result in tqdm(search_results.search_results, desc="Generating answers"):
+            ans = generator.generate_answer(
+                result.question,
+                result.retrieved_sources,
+                texts,
+                all_chunks
             )
+            all_answers.append(MinimalAnswer(
+                question_id=result.question_id,
+                question=result.question,
+                retrieved_sources=result.retrieved_sources,
+                answer=ans
+            ))
 
-        # 5. décoder (seulement les nouveaux tokens)
-        input_length = inputs["input_ids"].shape[1]
-        answer = self.tokenizer.decode(
-            outputs[0][input_length:],
-            skip_special_tokens=True
+        # 4. sauvegarder
+        output = StudentSearchResultsAndAnswer(
+            search_results=all_answers,
+            k=search_results.k
         )
+        os.makedirs(save_directory, exist_ok=True)
+        filename = os.path.basename(student_search_results_path)
+        save_path = os.path.join(save_directory, filename)
 
-        return answer.strip()
+        with open(save_path, "w") as f:
+            f.write(output.model_dump_json(indent=2))
+
+        print(f"Saved student_search_results_and_answer to {save_path}")
+
+    def evaluate(
+        self,
+        student_search_results_path: str,
+        dataset_path: str
+    ) -> None:
+        """
+        Calcule le recall@k entre tes résultats et le dataset de référence.
+
+        Args:
+            student_search_results_path: chemin vers StudentSearchResults JSON
+            dataset_path: chemin vers le dataset AnsweredQuestions JSON
+        """
+        # 1. charger tes résultats
+        try:
+            with open(student_search_results_path, "r") as f:
+                student_data = json.load(f)
+            student_results = StudentSearchResults(**student_data)
+        except Exception as e:
+            print(f"Error loading student results: {e}")
+            return
+
+        # 2. charger le dataset de référence
+        try:
+            with open(dataset_path, "r") as f:
+                ref_data = json.load(f)
+            ref_dataset = RagDataset(**ref_data)
+        except Exception as e:
+            print(f"Error loading reference dataset: {e}")
+            return
+
+        # 3. construire un dict question_id → vraies sources
+        ref_dict: dict[str, AnsweredQuestion] = {}
+        for q in ref_dataset.rag_questions:
+            if isinstance(q, AnsweredQuestion):
+                ref_dict[q.question_id] = q
+
+        # 4. calculer recall@k
+        k = student_results.k
+        total_recall = 0.0
+        count = 0
+
+        for result in student_results.search_results:
+            if result.question_id not in ref_dict:
+                continue
+
+            ref_q = ref_dict[result.question_id]
+            found = 0
+
+            for ref_source in ref_q.sources:
+                for student_source in result.retrieved_sources:
+                    # même fichier ?
+                    if student_source.file_path != ref_source.file_path:
+                        continue
+                    # overlap IoU > 0.05 ?
+                    inter_start = max(
+                        student_source.first_character_index,
+                        ref_source.first_character_index
+                    )
+                    inter_end = min(
+                        student_source.last_character_index,
+                        ref_source.last_character_index
+                    )
+                    inter = max(0, inter_end - inter_start)
+                    union = (
+                        student_source.last_character_index
+                        - student_source.first_character_index
+                        + ref_source.last_character_index
+                        - ref_source.first_character_index
+                        - inter
+                    )
+                    iou = inter / union if union > 0 else 0
+                    if iou > 0.05:
+                        found += 1
+                        break
+
+            recall = found / len(ref_q.sources) if ref_q.sources else 0
+            total_recall += recall
+            count += 1
+
+        avg_recall = total_recall / count if count > 0 else 0
+        print(f"Recall@{k}: {avg_recall:.3f} ({avg_recall * 100:.1f}%)")
+
+
+if __name__ == "__main__":
+    fire.Fire(RAG)

@@ -1,5 +1,5 @@
 # le repo VLLM
-DATA_RAW_PATH = "data/raw"
+DATA_RAW_PATH = "data/raw/vllm-0.10.1"
 # index sera sauvgarder ici
 DATA_PROCESSED_PATH = "data/processed"
 # 2000 caractères max par chunk

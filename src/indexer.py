@@ -23,7 +23,6 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
                 chunk.first_character_index:chunk.last_character_index
             ]
             all_texts.append(chunk_text)
-
     print("Building BM25 index...")
     # ex: [["python", "is", "powerful"]]
     # Chaque liste représente un document/chunk.

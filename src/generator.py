@@ -11,7 +11,7 @@ class Generator:
         self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
         self.model = AutoModelForCausalLM.from_pretrained(
             MODEL_NAME,
-            torch_dtype=torch.float32
+            dtype=torch.float32
         )
         self.model.eval()
         print("Model loaded!")
@@ -33,7 +33,10 @@ class Generator:
                         )
                         break
         context = "\n***\n".join(context_parts)
-        prompt = f"""Answer the question based on the context below.
+        # prompt = f"""Answer the question based on the context below.
+        prompt = f"""You are a helpful assistant. \
+        Answer the question using ONLY the information from the context. \
+        Be concise. Stop after one short paragraph.
         Context:
         {context}
         Question: {question}
@@ -53,10 +56,10 @@ class Generator:
         with torch.no_grad():
             output = self.model.generate(
                 **inputs,
-                max_new_tokens=200,
+                max_new_tokens=100,
                 do_sample=False,
-                pad_token_id=self.tokenizer.eos_token_id
-
+                pad_token_id=self.tokenizer.eos_token_id,
+                repetition_penalty=1.3
             )
         # ona une seule sequence(prompt) donc (1, size_des_id)
         # torch.Size([1, 5_ex])

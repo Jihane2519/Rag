@@ -6,7 +6,7 @@ def chunk_python(file_path, content, max_size) -> list[MinimalSource]:
     start = 0
     while start < len(content):
         end = min(start + max_size, len(content))
-        chunks.append(MinimalSource(file_path, start, end))
+        chunks.append(MinimalSource(file_path=file_path, first_character_index=start, last_character_index=end))
         start = end
     return chunks
 
@@ -26,9 +26,9 @@ def _flush_chunk(file_path, content, start, text, max_size, chunks):
             end = min(offset + max_size, len(text))
             chunks.append(
                 MinimalSource(
-                    file_path,
-                    start + offset,
-                    start + end
+                    file_path=file_path,
+                    first_character_index=start + offset,
+                    last_character_index=start + end
                 )
             )
             offset = end

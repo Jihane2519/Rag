@@ -40,6 +40,7 @@ class RAG:
             print(
                 f"{r.file_path} [{r.first_character_index}:{r.last_character_index}]"
             )
+
     def search_dataset(
         self,
         dataset_path: str,
@@ -63,18 +64,17 @@ class RAG:
                     retrieved_sources=sources
                 )
             )
-            output = StudentSarchResults(
-                search_results=all_results,
-                k=k
-            )
-            os.makedirs(save_directory, exist_ok=True)
-            # le nom de fichier seulement 
-            filename = os.path.basename(dataset_path)
-            save_path = os.path.join(save_directory, filename)
-            with open(save_path, "w") as f:
-                f.write(output.model_dump_json(indent=2))
-            print(f"Saved student_search_results to {save_path}")
-
+        output = StudentSearchResults(
+            search_results=all_results,
+            k=k
+        )
+        os.makedirs(save_directory, exist_ok=True)
+        # le nom de fichier seulement 
+        filename = os.path.basename(dataset_path)
+        save_path = os.path.join(save_directory, filename)
+        with open(save_path, "w") as f:
+            f.write(output.model_dump_json(indent=2))
+        print(f"Saved student_search_results to {save_path}")
 
     def answer(self, query: str, k: int = 5) -> None:
         if not query:
@@ -188,8 +188,8 @@ class RAG:
                 continue
             ref_q = ref_dict[result.question_id]
             found = 0
-            for ref_sources in ref_q.sources:
-                for student_source in result.retrieved_sources
+            for ref_source in ref_q.sources:
+                for student_source in result.retrieved_sources:
                     if student_source.file_path != ref_source.file_path:
                         continue
                     inter_start = max(
@@ -224,11 +224,9 @@ class RAG:
         print(f"Recall@{k}: {avg_recall:.3f} ({avg_recall * 100:.1f}%)")
 
 
-
-
-                
-if __name__== "__main__":
-    fire.Fire(RAG)
+if __name__ == "__main__":
+    fire.Fire(RAG.index)
+    fire.Fire(RAG.search_dataset)
     # with open("/goinfre/jbounou/rag/tester/test.md", "r") as e:
     #     res = e.read()
     # chunks = chunk_file("/goinfre/jbounou/rag/test", res, 100)

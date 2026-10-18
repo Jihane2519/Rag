@@ -5,14 +5,14 @@ def chunk_python(file_path, content, max_size) -> list[MinimalSource]:
     chunks = []
     start = 0
     while start < len(content):
-        end = min(start + max_size, len(content))
+        end = min(start + 2000, len(content))
         chunks.append(MinimalSource(file_path=file_path, first_character_index=start, last_character_index=end))
         start = end
     return chunks
 
 
 def _flush_chunk(file_path, content, start, text, max_size, chunks):
-    if len(text) <= max_size:
+    if len(text) <= 2000:
         chunks.append(
                 MinimalSource(
                     file_path=file_path,
@@ -23,7 +23,7 @@ def _flush_chunk(file_path, content, start, text, max_size, chunks):
     else:
         offset = 0
         while offset < len(text):
-            end = min(offset + max_size, len(text))
+            end = min(offset + 2000, len(text))
             chunks.append(
                 MinimalSource(
                     file_path=file_path,

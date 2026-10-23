@@ -225,8 +225,8 @@ class RAG:
 
 
 if __name__ == "__main__":
-    fire.Fire(RAG.index)
-    fire.Fire(RAG.search_dataset)
+    fire.Fire(RAG)
+    # fire.Fire(RAG.search_dataset)
     # with open("/goinfre/jbounou/rag/tester/test.md", "r") as e:
     #     res = e.read()
     # chunks = chunk_file("/goinfre/jbounou/rag/test", res, 100)

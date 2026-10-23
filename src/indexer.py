@@ -1,5 +1,6 @@
 import os
 import pickle
+import re
 from rank_bm25 import BM25Okapi
 from tqdm import tqdm
 from src.models import MinimalSource
@@ -27,9 +28,13 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     # ex: [["python", "is", "powerful"]]
     # Chaque liste représente un document/chunk.
     tokenized = [
-        text.lower().split()
+        re.findall(r'\b\w+\b', text.lower())
         for text in tqdm(all_texts, desc="Tokenizing")
     ]
+    # tokenized = [
+    #     text.lower().split()
+    #     for text in tqdm(all_texts, desc="Tokenizing")
+    # ]
     bm25 = BM25Okapi(tokenized)
     # print(type(bm25)) -> <class 'rank_bm25.BM25Okapi'>
 

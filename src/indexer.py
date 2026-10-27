@@ -27,6 +27,11 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     print("Building BM25 index...")
     # ex: [["python", "is", "powerful"]]
     # Chaque liste représente un document/chunk.
+    # tokenized = [
+    #     re.findall(r'\b\w+\b', text.lower())
+    #     for text in tqdm(all_texts, desc="Tokenizing")
+    # ]
+
     tokenized = [
         re.findall(r'\b\w+\b', text.lower())
         for text in tqdm(all_texts, desc="Tokenizing")

@@ -7,7 +7,7 @@ def load_files(raw_path: str) -> list[tuple[str, str]]:
     all_files = []
     for root, _, filenames in os.walk(raw_path):
         for filename in filenames:
-            if filename.endswith(".py") or filename.endswith(".md"):
+            if filename.endswith((".py", ".md", "CMakeLists.txt")):
                 all_files.append(os.path.join(root, filename))
     for file_path in tqdm(all_files, desc="files is loading"):
         # print(file_path)

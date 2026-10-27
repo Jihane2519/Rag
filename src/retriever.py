@@ -1,4 +1,5 @@
 import numpy as np
+import re
 from src.models import MinimalSource
 from src.indexer import load_index
 
@@ -18,7 +19,8 @@ def search(query: str, k: int = 5) -> list[MinimalSource]:
     bm25, chunks, texts = load_index()
 
     # tokenizer la query comme les chunks
-    tokenized_query = query.lower().split()
+    # tokenized_query = query.lower().split()
+    tokenized_query = re.findall(r'\b\w+\b', query.lower())
 
     # calculer les scores BM25 pour chaque chunk
     scores = bm25.get_scores(tokenized_query)

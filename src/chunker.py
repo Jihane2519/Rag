@@ -1,29 +1,19 @@
 from src.models import MinimalSource
 import ast
-import re
-from src.models import MinimalSource
 
-from src.models import MinimalSource
 
-#73  & 45
+# 73  & 45
 def chunk_python(file_path, content, max_size=2000):
-    # max_size = int(max_size)
+    max_size = int(max_size)
     chunks = []
     try:
         tree = ast.parse(content)
-        for node in ast.walk(tree):
+        for node in ast.iter_child_nodes(tree):
             if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
-                start = node.col_offset
                 # calculer start/end en caractères
                 lines = content.split("\n")
                 start_char = sum(len(l)+1 for l in lines[:node.lineno-1])
                 end_char = sum(len(l)+1 for l in lines[:node.end_lineno])
-                # if end_char - start_char <= max_size:
-                #     chunks.append(MinimalSource(
-                #         file_path=file_path,
-                #         first_character_index=start_char,
-                #         last_character_index=end_char
-                #     ))
                 offset = start_char
 
                 while offset < end_char:
@@ -50,61 +40,6 @@ def chunk_python(file_path, content, max_size=2000):
             ))
             start = end
     return chunks
-
-# def _flush_chunk(file_path, content, start, text, max_size, chunks):
-#     if len(text) <= max_size:
-#         chunks.append(
-#                 MinimalSource(
-#                     file_path=file_path,
-#                     first_character_index=start,
-#                     last_character_index=start + len(text)
-#                 )
-#         )
-#     else:
-#         offset = 0
-#         while offset < len(text):
-#             end = min(offset + max_size, len(text))
-#             chunks.append(
-#                 MinimalSource(
-#                     file_path=file_path,
-#                     first_character_index=start + offset,
-#                     last_character_index=start + end
-#                 )
-#             )
-#             offset = end
-
-
-# def chunk_markdown(file_path, content, max_size) -> list[MinimalSource]:
-#     # max_size = int(max_size)
-#     chunks = []
-#     lines = content.split("\n")
-#     current_start = 0
-#     current_text = ""
-#     for line in lines:
-#         if line.startswith("#") and current_text.strip():
-#             _flush_chunk(
-#                 file_path,
-#                 content,
-#                 current_start,
-#                 current_text,
-#                 max_size,
-#                 chunks
-#             )
-#             current_start = current_start + len(current_text)
-#             current_text = line + "\n"
-#         else:
-#             current_text += line + "\n"
-#     if current_text.strip():
-#         _flush_chunk(
-#             file_path,
-#             content,
-#             current_start,
-#             current_text,
-#             max_size,
-#             chunks
-#         )
-#     return chunks
-
 
 def _flush_chunk(file_path, start, end, max_size, chunks):
     """Découpe une section en chunks avec des positions exactes."""

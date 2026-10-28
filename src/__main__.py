@@ -2,21 +2,18 @@ import json
 import os
 from tqdm import tqdm
 import fire
-
-from src.chunker import chunk_file
 from src.retriever import search
 from src.indexer import build_index, load_index
 from src.generator import Generator
 from src.models import (
-    MinimalSource,
     MinimalSearchResults,
     MinimalAnswer,
     StudentSearchResults,
     StudentSearchResultsAndAnswer,
     RagDataset,
-    UnansweredQuestion,
     AnsweredQuestion,
 )
+
 
 class RAG:
     """CLI principal du système RAG."""
@@ -28,6 +25,8 @@ class RAG:
             max_chunk_size: taille max d'un chunk en caractères
         """
         build_index(max_chunk_size)
+
+
     def search(self, query: str, k: int = 5) -> None:
         if not query:
             print("Error: query is empty")
@@ -45,7 +44,7 @@ class RAG:
         self,
         dataset_path: str,
         k: int = 5,
-        save_directory: str = "data/output/search_results"
+        save_directory: str = "datr q in tqdm(dataa/output/search_results"
     ) -> None:
         try:
             with open(dataset_path, "r") as f:
@@ -55,8 +54,13 @@ class RAG:
             print(f"Error loading dataset: {e}")
             return
         all_results: list[MinimalSearchResults]= []
-        for q in tqdm(dataset.rag_questions, desc="serching_questions"):
-            sources = search(q.question, k)
+        tokenizer = (
+            "code"
+            if "code" in os.path.basename(dataset_path).lower()
+            else "docs"
+        )
+        foset.rag_questions, desc="serching_questions"):
+            sources = search(q.question, k, tokenizer=tokenizer)
             all_results.append(
                 MinimalSearchResults(
                     question_id=q.question_id,
@@ -121,7 +125,7 @@ class RAG:
         for result in tqdm(search_results.search_results, desc="Generating answers"):
             ans = generator.generate_answer(
                 result.question,
-                result.retrieved_answer,
+                result.retrieved_sources,
                 texts,
                 all_chunks
             )
@@ -147,7 +151,7 @@ class RAG:
         self,
         student_search_results_path: str,
         dataset_path: str
-        ) -> None:
+    ) -> None:
         """
         mesurer la qualité de ton Retriever, en calculant le Recall@k
 
@@ -208,7 +212,7 @@ class RAG:
                         - ref_source.first_character_index
                         - inter
                     )
-                    #IoU (Intersection over Union)
+                    # IoU (Intersection over Union)
                     IoU = inter / union if union > 0 else 0
                     # Si au moins 5% du contenu est considéré comme commun, on considère 
                     # que la source trouvée correspond à la source de référence.
@@ -226,17 +230,3 @@ class RAG:
 
 if __name__ == "__main__":
     fire.Fire(RAG)
-    # fire.Fire(RAG.search_dataset)
-    # with open("/goinfre/jbounou/rag/tester/test.md", "r") as e:
-    #     res = e.read()
-    # chunks = chunk_file("/goinfre/jbounou/rag/test", res, 100)
-    # build_index(1000)
-    # meilleur = search("What is BM25 used for?", 1)
-    # start = meilleur[0].first_character_index
-    # end = meilleur[0].last_character_index
-    # print(res[start:end])
-    # print(res)
-# def main() -> None:
-#     print("RAG against the machine")
-# if __name__ == "__main__":
-#     main()

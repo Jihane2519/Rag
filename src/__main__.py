@@ -59,7 +59,7 @@ class RAG:
             if "code" in os.path.basename(dataset_path).lower()
             else "docs"
         )
-        foset.rag_questions, desc="serching_questions"):
+        for q in tqdm(dataset.rag_questions, desc="Searching questions"):
             sources = search(q.question, k, tokenizer=tokenizer)
             all_results.append(
                 MinimalSearchResults(

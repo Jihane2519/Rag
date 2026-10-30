@@ -112,8 +112,6 @@
 #         return []
 
 
-from pathlib import Path
-
 from langchain_text_splitters import (
     MarkdownTextSplitter,
     PythonCodeTextSplitter,
@@ -126,7 +124,7 @@ def chunk_file(
     file_path: str,
     content: str,
     max_size: int = 2000,
-    overlap: int = 0,
+    overlap: int = 200,
 ) -> list[MinimalSource]:
     if max_size <= 0:
         raise ValueError("max_size doit être supérieur à 0")
@@ -167,20 +165,8 @@ def chunk_file(
             MinimalSource(
                 file_path=file_path,
                 first_character_index=start,
-                last_character_index=end,
-                text=text,
+                last_character_index=end
             )
         )
 
     return chunks
-
-
-def load_files(root: str) -> list[tuple[str, str]]:
-    files: list[tuple[str, str]] = []
-
-    for path in Path(root).rglob("*"):
-        if path.is_file() and path.suffix in {".md", ".py"}:
-            content = path.read_text(encoding="utf-8")
-            files.append((str(path), content))
-
-    return files

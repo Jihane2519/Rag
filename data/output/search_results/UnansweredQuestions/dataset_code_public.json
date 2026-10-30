@@ -955,9 +955,9 @@
           "last_character_index": 12654
         },
         {
-          "file_path": "data/raw/vllm-0.10.1/benchmarks/benchmark_serving.py",
-          "first_character_index": 5720,
-          "last_character_index": 7487
+          "file_path": "data/raw/vllm-0.10.1/benchmarks/benchmark_serving_structured_output.py",
+          "first_character_index": 12964,
+          "last_character_index": 14731
         }
       ]
     },

@@ -42,7 +42,7 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     print("Building BM25 index...")
     # ex: [["python", "is", "powerful"]]
     # Chaque liste représente un document/chunk.
-    # tokenized = [text.lower().split() for text in all_texts]
+    # tokenized_docs = [text.lower().split() for text in all_texts]
     tokenized_docs = [
         re.findall(r'\w+', text.lower())
         for text in tqdm(all_texts, desc="Tokenizing")
@@ -57,7 +57,7 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
 
     os.makedirs(DATA_PROCESSED_PATH, exist_ok=True)
 
-    with open(f"{DATA_PROCESSED_PATH}/bm25.pkl", "wb") as f:
+    with open(f"{DATA_PROCESSED_PATH}/bm25_docs.pkl", "wb") as f:
         pickle.dump(bm25_docs, f)
     with open(f"{DATA_PROCESSED_PATH}/bm25_code.pkl", "wb") as f:
         pickle.dump(bm25_code, f)
@@ -66,7 +66,10 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     with open(f"{DATA_PROCESSED_PATH}/texts.pkl", "wb") as f:
         pickle.dump(all_texts, f)
 
-    print(f"Ingestion complete! Indexed {len(all_chunks)} chunks under {DATA_PROCESSED_PATH}/")
+    print(
+        f"Ingestion complete! Indexed {len(all_chunks)}"
+        "chunks under {DATA_PROCESSED_PATH}/"
+    )
 
 
 def load_index(
@@ -75,7 +78,7 @@ def load_index(
     if tokenizer == "code":
         index_path = f"{DATA_PROCESSED_PATH}/bm25_code.pkl"
     else:
-        index_path = f"{DATA_PROCESSED_PATH}/bm25.pkl"
+        index_path = f"{DATA_PROCESSED_PATH}/bm25_docs.pkl"
 
     with open(index_path, "rb") as f:
         bm25 = pickle.load(f)

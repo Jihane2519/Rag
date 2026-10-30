@@ -26,12 +26,14 @@ class Generator:
         context_parts = []
         for chunk in chunks:
             for i, c in enumerate(all_chunks):
-                if (c.file_path == chunk.file_path and 
-                        c.first_character_index == chunk.first_character_index):
-                        context_parts.append(
+                if (
+                    c.file_path == chunk.file_path
+                    and c.first_character_index == chunk.first_character_index
+                ):
+                    context_parts.append(
                             f"Source: {c.file_path}\n{texts[i]}"
-                        )
-                        break
+                    )
+                    break
         context = "\n***\n".join(context_parts)
         # prompt = f"""Answer the question based on the context below.
         prompt = f"""You are a helpful assistant. \
@@ -41,7 +43,7 @@ class Generator:
         {context}
         Question: {question}
         Answer:"""
-        #inputs = {
+        # inputs = {
         # "input_ids": ...,
         # "attention_mask": ...
         # }

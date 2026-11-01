@@ -26,7 +26,6 @@ class RAG:
         """
         build_index(max_chunk_size)
 
-
     def search(self, query: str, k: int = 5) -> None:
         if not query:
             print("Error: query is empty")
@@ -44,7 +43,7 @@ class RAG:
         self,
         dataset_path: str,
         k: int = 5,
-        save_directory: str = "datr q in tqdm(dataa/output/search_results"
+        save_directory: str = "data/output/search_results"
     ) -> None:
         try:
             with open(dataset_path, "r") as f:
@@ -53,7 +52,7 @@ class RAG:
         except Exception as e:
             print(f"Error loading dataset: {e}")
             return
-        all_results: list[MinimalSearchResults]= []
+        all_results: list[MinimalSearchResults] = []
         tokenizer = (
             "code"
             if "code" in os.path.basename(dataset_path).lower()
@@ -73,7 +72,7 @@ class RAG:
             k=k
         )
         os.makedirs(save_directory, exist_ok=True)
-        # le nom de fichier seulement 
+        # le nom de fichier seulement
         filename = os.path.basename(dataset_path)
         save_path = os.path.join(save_directory, filename)
         with open(save_path, "w") as f:
@@ -214,11 +213,11 @@ class RAG:
                     )
                     # IoU (Intersection over Union)
                     IoU = inter / union if union > 0 else 0
-                    # Si au moins 5% du contenu est considéré comme commun, on considère 
+                    # Si au moins 5% du contenu est considéré comme commun, on considère
                     # que la source trouvée correspond à la source de référence.
                     if IoU > 0.05:
                         found += 1
-                        # Une fois qu'on a trouvé une source 
+                        # Une fois qu'on a trouvé une source
                         # de référence qui correspond à une source retrouvée
                         break
             recall = found / len(ref_q.sources) if ref_q.sources else 0

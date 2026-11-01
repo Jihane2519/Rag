@@ -132,7 +132,7 @@ def chunk_file(
     if overlap < 0 or overlap >= max_size:
         raise ValueError("overlap doit être compris entre 0 et max_size - 1")
 
-    if file_path.endswith(".md"):
+    if file_path.endswith((".md", ".txt")):
         splitter = MarkdownTextSplitter(
             chunk_size=max_size,
             chunk_overlap=overlap,

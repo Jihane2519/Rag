@@ -53,13 +53,13 @@ class RAG:
             print(f"Error loading dataset: {e}")
             return
         all_results: list[MinimalSearchResults] = []
-        tokenizer = (
-            "code"
-            if "code" in os.path.basename(dataset_path).lower()
-            else "docs"
-        )
+        # tokenizer = (
+        #     "code"
+        #     if "code" in os.path.basename(dataset_path).lower()
+        #     else "docs"
+        # )
         for q in tqdm(dataset.rag_questions, desc="Searching questions"):
-            sources = search(q.question, k, tokenizer=tokenizer)
+            sources = search(q.question, k)
             all_results.append(
                 MinimalSearchResults(
                     question_id=q.question_id,

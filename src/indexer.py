@@ -9,7 +9,7 @@ from src.loader import load_files
 from src.chunker import chunk_file
 
 
-def tokenize_code(text: str) -> list[str]:
+def tokenize(text: str) -> list[str]:
     """Tokenize identifiers and split their parts."""
     tokens = re.findall(r"\w+", text.lower())
     result = []
@@ -43,24 +43,27 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     # ex: [["python", "is", "powerful"]]
     # Chaque liste représente un document/chunk.
     # tokenized_docs = [text.lower().split() for text in all_texts]
-    tokenized_docs = [
-        re.findall(r'\w+', text.lower())
-        for text in tqdm(all_texts, desc="Tokenizing")
-    ]
-    tokenized_code = [
-        tokenize_code(text)
+    # tokenized_docs = [
+    #     re.findall(r'\w+', text.lower())
+    #     for text in tqdm(all_texts, desc="Tokenizing")
+    # ]
+    tokenized = [
+        tokenize(text)
         for text in tqdm(all_texts, desc="Tokenizing code")
     ]
-    bm25_docs = BM25Okapi(tokenized_docs)
-    bm25_code = BM25Okapi(tokenized_code)
+    bm25 = BM25Okapi(tokenized)
+    # bm25_docs = BM25Okapi(tokenized_docs)
+    # bm25_code = BM25Okapi(tokenized_code)
     # print(type(bm25)) -> <class 'rank_bm25.BM25Okapi'>
 
     os.makedirs(DATA_PROCESSED_PATH, exist_ok=True)
 
-    with open(f"{DATA_PROCESSED_PATH}/bm25_docs.pkl", "wb") as f:
-        pickle.dump(bm25_docs, f)
-    with open(f"{DATA_PROCESSED_PATH}/bm25_code.pkl", "wb") as f:
-        pickle.dump(bm25_code, f)
+    # with open(f"{DATA_PROCESSED_PATH}/bm25_docs.pkl", "wb") as f:
+    #     pickle.dump(bm25_docs, f)
+    # with open(f"{DATA_PROCESSED_PATH}/bm25_code.pkl", "wb") as f:
+    #     pickle.dump(bm25_code, f)
+    with open(f"{DATA_PROCESSED_PATH}/bm25.pkl", "wb") as f:
+        pickle.dump(bm25, f)
     with open(f"{DATA_PROCESSED_PATH}/chunks.pkl", "wb") as f:
         pickle.dump(all_chunks, f)
     with open(f"{DATA_PROCESSED_PATH}/texts.pkl", "wb") as f:
@@ -72,14 +75,32 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     )
 
 
-def load_index(
-    tokenizer: str = "docs",
-) -> tuple[BM25Okapi, list[MinimalSource], list[str]]:
-    if tokenizer == "code":
-        index_path = f"{DATA_PROCESSED_PATH}/bm25_code.pkl"
-    else:
-        index_path = f"{DATA_PROCESSED_PATH}/bm25_docs.pkl"
+# def load_index(
+#     tokenizer: str = "docs",
+# ) -> tuple[BM25Okapi, list[MinimalSource], list[str]]:
+#     if tokenizer == "code":
+#         index_path = f"{DATA_PROCESSED_PATH}/bm25_code.pkl"
+#     else:
+#         index_path = f"{DATA_PROCESSED_PATH}/bm25_docs.pkl"
 
+#     with open(index_path, "rb") as f:
+#         bm25 = pickle.load(f)
+
+#     with open(f"{DATA_PROCESSED_PATH}/chunks.pkl", "rb") as f:
+#         chunks: list[MinimalSource] = pickle.load(f)
+
+#     with open(f"{DATA_PROCESSED_PATH}/texts.pkl", "rb") as f:
+#         texts: list[str] = pickle.load(f)
+
+#     return bm25, chunks, texts
+
+
+def load_index() -> tuple[BM25Okapi, list[MinimalSource], list[str]]:
+    # if tokenizer == "code":
+    #     index_path = f"{DATA_PROCESSED_PATH}/bm25_code.pkl"
+    # else:
+    #     index_path = f"{DATA_PROCESSED_PATH}/bm25_docs.pkl"
+    index_path = f"{DATA_PROCESSED_PATH}/bm25.pkl"
     with open(index_path, "rb") as f:
         bm25 = pickle.load(f)
 

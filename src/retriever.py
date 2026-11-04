@@ -1,21 +1,37 @@
 import numpy as np
 import re
 from src.models import MinimalSource
-from src.indexer import load_index, tokenize_code
+from src.indexer import load_index, tokenize
 
+
+# def search(
+#     query: str,
+#     k: int = 5,
+#     tokenizer: str = "docs",
+# ) -> list[MinimalSource]:
+#     bm25, chunks, texts = load_index(tokenizer)
+
+#     if tokenizer == "code":
+#         tokenized_query = tokenize_code(query)
+#     else:
+#         tokenized_query = re.findall(r"\w+", query.lower())
+
+#     scores = bm25.get_scores(tokenized_query)
+#     meilleur_k: list[int] = np.argsort(scores)[::-1][:k]
+
+#     return [chunks[i] for i in meilleur_k]
 
 def search(
     query: str,
     k: int = 5,
-    tokenizer: str = "docs",
 ) -> list[MinimalSource]:
-    bm25, chunks, texts = load_index(tokenizer)
+    bm25, chunks, texts = load_index()
 
-    if tokenizer == "code":
-        tokenized_query = tokenize_code(query)
-    else:
-        tokenized_query = re.findall(r"\w+", query.lower())
-
+    # if tokenizer == "code":
+    #     tokenized_query = tokenize_code(query)
+    # else:
+    #     tokenized_query = re.findall(r"\w+", query.lower())
+    tokenized_query = tokenize(query)
     scores = bm25.get_scores(tokenized_query)
     meilleur_k: list[int] = np.argsort(scores)[::-1][:k]
 

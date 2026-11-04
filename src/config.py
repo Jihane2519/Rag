@@ -6,3 +6,4 @@ DATA_PROCESSED_PATH = "data/processed"
 DEFAULT_CHUNK_SIZE = 2000
 DEFAULT_CODE_CHUNK_SIZE = 1000  # plus petit pour code
 MODEL_NAME = "Qwen/Qwen3-0.6B"
+MODEL_NAME_EMBEDDING = "sentence-transformers/all-MiniLM-L6-v2"

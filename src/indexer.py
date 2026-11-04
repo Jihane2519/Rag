@@ -49,7 +49,7 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     # ]
     tokenized = [
         tokenize(text)
-        for text in tqdm(all_texts, desc="Tokenizing code")
+        for text in tqdm(all_texts, desc="Tokenizing")
     ]
     bm25 = BM25Okapi(tokenized)
     # bm25_docs = BM25Okapi(tokenized_docs)

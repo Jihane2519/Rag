@@ -15,4 +15,4 @@ class Embedder:
             normalize_embeddings=True,
             show_progress_bar=True
         )
-    
+

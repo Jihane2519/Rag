@@ -1,12 +1,14 @@
 import os
 import pickle
 import re
+import numpy as np
 from rank_bm25 import BM25Okapi
 from tqdm import tqdm
 from src.models import MinimalSource
 from src.config import DATA_RAW_PATH, DATA_PROCESSED_PATH, DEFAULT_CHUNK_SIZE
 from src.loader import load_files
 from src.chunker import chunk_file
+from src.embedder import Embedder
 
 
 def tokenize(text: str) -> list[str]:
@@ -52,6 +54,8 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
         for text in tqdm(all_texts, desc="Tokenizing")
     ]
     bm25 = BM25Okapi(tokenized)
+    embedder = Embedder()
+    embeddings = embedder.encode(all_texts)
     # bm25_docs = BM25Okapi(tokenized_docs)
     # bm25_code = BM25Okapi(tokenized_code)
     # print(type(bm25)) -> <class 'rank_bm25.BM25Okapi'>
@@ -68,10 +72,12 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
         pickle.dump(all_chunks, f)
     with open(f"{DATA_PROCESSED_PATH}/texts.pkl", "wb") as f:
         pickle.dump(all_texts, f)
+    with open(f"{DATA_PROCESSED_PATH}/embeddings.pkl", "wb") as f:
+        pickle.dump(embeddings, f)
 
     print(
-        f"Ingestion complete! Indexed {len(all_chunks)}"
-        "chunks under {DATA_PROCESSED_PATH}/"
+        f"Ingestion complete! Indexed {len(all_chunks)} "
+        f"chunks under {DATA_PROCESSED_PATH}/"
     )
 
 
@@ -95,13 +101,18 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
 #     return bm25, chunks, texts
 
 
-def load_index() -> tuple[BM25Okapi, list[MinimalSource], list[str]]:
+def load_index() -> tuple[
+    BM25Okapi,
+    list[MinimalSource],
+    list[str],
+    np.ndarray
+]:
     # if tokenizer == "code":
     #     index_path = f"{DATA_PROCESSED_PATH}/bm25_code.pkl"
     # else:
     #     index_path = f"{DATA_PROCESSED_PATH}/bm25_docs.pkl"
-    index_path = f"{DATA_PROCESSED_PATH}/bm25.pkl"
-    with open(index_path, "rb") as f:
+    # index_path = f"{DATA_PROCESSED_PATH}/bm25.pkl"
+    with open(f"{DATA_PROCESSED_PATH}/bm25.pkl", "rb") as f:
         bm25 = pickle.load(f)
 
     with open(f"{DATA_PROCESSED_PATH}/chunks.pkl", "rb") as f:
@@ -110,4 +121,7 @@ def load_index() -> tuple[BM25Okapi, list[MinimalSource], list[str]]:
     with open(f"{DATA_PROCESSED_PATH}/texts.pkl", "rb") as f:
         texts: list[str] = pickle.load(f)
 
-    return bm25, chunks, texts
+    with open(f"{DATA_PROCESSED_PATH}/embeddings.pkl", "rb") as f:
+        embeddings = pickle.load(f)
+
+    return bm25, chunks, texts, embeddings

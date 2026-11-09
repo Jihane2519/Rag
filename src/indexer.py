@@ -34,10 +34,7 @@ def get_file_hash(content: str) -> str:
     return hashlib.sha256(content.encode("utf-8")).hexdigest()
 
 
-def save_manifest(
-    manifest: dict[str, str],
-    max_chunk_size: int
-) -> None:
+def save_manifest(files: dict[str, str], max_chunk_size: int) -> None:
     """Save current file hashes and indexing configuration."""
     manifest_path = f"{DATA_PROCESSED_PATH}/manifest.json"
     data = {"max_chunk_size": max_chunk_size, "files": files}
@@ -93,15 +90,15 @@ def load_old_data() -> dict[str,list[tuple]]:
         old_data.setdefault(chunk.file_path, []).append((chunk, text, emb))
     return old_data
 
-def_build_index(max_chunk_size: int) -> None:
+def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     files: list[tuple[str, str]] = load_files(DATA_RAW_PATH)
-    changed_files, deleted_files, new_manifest = detecte_changes(
+    changed_files, deleted_files, new_manifest = detect_changes(
         files, load_manifest(), max_chunk_size
     )
     all_chunks: list[MinimalSource] = []
     all_texts: list[str] = []
     all_embeddings:list = []
-    skip = {path for path, _ in changed_files} | deleted_files
+    skip = {path for path, _ in changed_files} | set(deleted_files)
     # restorer the old files qui ne sont pas changer
     for path, data in load_old_data().items():
         # modifié ou supprimé -> on ne recopie PAS ses anciens chunks
@@ -112,9 +109,9 @@ def_build_index(max_chunk_size: int) -> None:
             all_texts.append(text)
             all_embeddings.append(emb)
     # rechunker les files qui sont modifier
-    new_texts: list[]
+    new_texts: list = []
     for path, content in tqdm(changed_files, desc="chunking_modified"):
-        chunks = file_chunk(path, content, max_chunk_size)
+        chunks = chunk_file(path, content, max_chunk_size)
         for chunk in chunks:
             text = content[chunk.first_character_index:chunk.last_character_index]
             all_chunks.append(chunk)

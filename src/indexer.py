@@ -57,12 +57,12 @@ def load_manifest() -> dict:
 def detect_changes(
     files: list[tuple[str, str]],
     old_manifest: dict,
-    config: dict[str, str],
+    max_chunk_size: int,
 ) -> tuple[list[tuple[str, str]], list[str], dict[str, str]]:
     new_manifest = {}
     changed_files = []
     old_files = old_manifest["files"]
-    config_changed = old_manifest["config"] != config
+    config_changed = old_manifest["max_chunk_size"] != max_chunk_size
     if config_changed:
         changed_files = files
     for file_path, content in files:
@@ -82,7 +82,7 @@ def detect_changes(
 
 def load_old_data() -> dict[str,list[tuple]]:
     """Group old (chunk, text, embeddings) by file path."""
-    if not (Path(DATA_PROCESSED_PATH) / "chunk.pkl").exists():
+    if not (Path(DATA_PROCESSED_PATH) / "chunks.pkl").exists():
         return {}
     _, chunks, texts, embeddings = load_index()
     old_data: dict[str, list[tuple]] = {}
@@ -90,21 +90,23 @@ def load_old_data() -> dict[str,list[tuple]]:
         old_data.setdefault(chunk.file_path, []).append((chunk, text, emb))
     return old_data
 
+
 def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     files: list[tuple[str, str]] = load_files(DATA_RAW_PATH)
+    # files: list[tuple[str, str]] = load_files("data/test_empty")
     changed_files, deleted_files, new_manifest = detect_changes(
         files, load_manifest(), max_chunk_size
     )
     all_chunks: list[MinimalSource] = []
     all_texts: list[str] = []
-    all_embeddings:list = []
+    all_embeddings: list = []
     skip = {path for path, _ in changed_files} | set(deleted_files)
     # restorer the old files qui ne sont pas changer
     for path, data in load_old_data().items():
         # modifié ou supprimé -> on ne recopie PAS ses anciens chunks
         if path in skip:
             continue
-        for chunk, text, emp in data:
+        for chunk, text, emb in data:
             all_chunks.append(chunk)
             all_texts.append(text)
             all_embeddings.append(emb)
@@ -119,18 +121,24 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
             new_texts.append(text)
     if new_texts:
         all_embeddings.extend(Embedder().encode(new_texts))
+    if not all_texts:
+        save_manifest(new_manifest, max_chunk_size)
+        print("No files to index. Keeping the existing index.")
+        return
     tokenized = [
         tokenize(text)
         for text in tqdm(all_texts, desc="Tokenizing")
     ]
-    bm25 = BM25Okapi(tokenized)
     embeddings = (
         np.array(all_embeddings) if all_embeddings
         else np.empty((0, 384))
     )
+
     assert len(all_chunks) == len(all_texts) == len(embeddings), (
         "Mismatch between chunks, texts and embeddings!"
     )
+
+    bm25 = BM25Okapi(tokenized)
 
     os.makedirs(DATA_PROCESSED_PATH, exist_ok=True)
     with open(f"{DATA_PROCESSED_PATH}/bm25.pkl", "wb") as f:
@@ -142,11 +150,14 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     with open(f"{DATA_PROCESSED_PATH}/embeddings.pkl", "wb") as f:
         pickle.dump(embeddings, f)
     save_manifest(new_manifest, max_chunk_size)
+    # print("Chunks:", len(all_chunks))
+    # print("Texts:", len(all_texts))
+    # print("Embeddings:", len(all_embeddings))
+    # print(
+    #     f"Ingestion complete! Indexed {len(all_chunks)} "
+    #     f"chunks under {DATA_PROCESSED_PATH}/"
+    # )
 
-    print(
-        f"Ingestion complete! Indexed {len(all_chunks)} "
-        f"chunks under {DATA_PROCESSED_PATH}/"
-    )
 
 def load_index() -> tuple[
     BM25Okapi,

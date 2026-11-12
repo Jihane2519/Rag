@@ -16,12 +16,17 @@ def normalize_scores(scores: np.ndarray) -> np.ndarray:
     return (scores - min_score) / (max_score - min_score)
 
 
-def search(
+def search_re(
     query: str,
     k: int = 5,
+    embedder=None,
+    index=None,
 ) -> list[MinimalSource]:
-    bm25, chunks, texts, embeddings = load_index()
-    embedder = Embedder()
+    if index is None:
+        index = load_index()
+    if embedder is None:
+        embedder = Embedder()
+    bm25, chunks, texts, embeddings = index
     query_embedding = embedder.encode([query])[0]
     tokenized_query = tokenize(query)
     # tableaux NumPy (numpy.ndarray)

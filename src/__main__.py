@@ -2,9 +2,11 @@ import json
 import os
 from tqdm import tqdm
 import fire
-from src.retriever import search
+from src.retriever import search_re
 from src.indexer import build_index, load_index
 from src.generator import Generator
+from src.embedder import Embedder
+from src.config import DEFAULT_CHUNK_SIZE
 from src.models import (
     MinimalSearchResults,
     MinimalAnswer,
@@ -17,7 +19,7 @@ from src.models import (
 
 class RAG:
     """CLI principal du système RAG."""
-    def index(self, max_chunk_size: int = 2000) -> None:
+    def index(self, max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
         """
         Ingeste data/raw/ et construit l'index sous data/processed/.
 
@@ -33,7 +35,7 @@ class RAG:
         if k <= 0:
             print("Error: k must be > 0")
             return
-        results = search(query, k)
+        results = search_re(query, k)
         for r in results:
             print(
                 f"{r.file_path} [{r.first_character_index}:{r.last_character_index}]"
@@ -58,8 +60,10 @@ class RAG:
         #     if "code" in os.path.basename(dataset_path).lower()
         #     else "docs"
         # )
+        index = load_index()
+        embedder = Embedder()
         for q in tqdm(dataset.rag_questions, desc="Searching questions"):
-            sources = search(q.question, k)
+            sources = search_re(q.question, k, embedder, index)
             all_results.append(
                 MinimalSearchResults(
                     question_id=q.question_id,
@@ -87,7 +91,7 @@ class RAG:
             print("Error: k must be > 0")
             return
         bm25, all_chunks, texts = load_index()
-        chunks = search(query, k)
+        chunks = search_re(query, k)
         generator = Generator()
         reponse_finale = generator.generate_answer(
             query,

@@ -116,15 +116,16 @@ from langchain_text_splitters import (
     MarkdownTextSplitter,
     PythonCodeTextSplitter,
 )
-
+from src.config import DEFAULT_CHUNK_SIZE
+from src.config import DEFAULT_OVERLAP
 from src.models import MinimalSource
 
 
 def chunk_file(
     file_path: str,
     content: str,
-    max_size: int = 2000,
-    overlap: int = 200,
+    max_size: int = DEFAULT_CHUNK_SIZE,
+    overlap: int = DEFAULT_OVERLAP,
 ) -> list[MinimalSource]:
     if max_size <= 0:
         raise ValueError("max_size doit être supérieur à 0")

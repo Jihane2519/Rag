@@ -99,13 +99,13 @@
       "retrieved_sources": [
         {
           "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/supported_hardware.md",
-          "first_character_index": 2059,
-          "last_character_index": 2697
+          "first_character_index": 0,
+          "last_character_index": 219
         },
         {
           "file_path": "data/raw/vllm-0.10.1/docs/features/quantization/supported_hardware.md",
-          "first_character_index": 0,
-          "last_character_index": 219
+          "first_character_index": 2059,
+          "last_character_index": 2697
         },
         {
           "file_path": "data/raw/vllm-0.10.1/docs/getting_started/installation/README.md",
@@ -1606,9 +1606,9 @@
           "last_character_index": 1898
         },
         {
-          "file_path": "data/raw/vllm-0.10.1/docs/contributing/model/registration.md",
+          "file_path": "data/raw/vllm-0.10.1/examples/online_serving/openai_chat_completion_client_for_multimodal.py",
           "first_character_index": 0,
-          "last_character_index": 1851
+          "last_character_index": 1870
         }
       ]
     },
@@ -1761,9 +1761,9 @@
           "last_character_index": 1866
         },
         {
-          "file_path": "data/raw/vllm-0.10.1/docs/models/supported_models.md",
-          "first_character_index": 52121,
-          "last_character_index": 53617
+          "file_path": "data/raw/vllm-0.10.1/docs/contributing/incremental_build.md",
+          "first_character_index": 0,
+          "last_character_index": 1961
         }
       ]
     },
@@ -2924,11 +2924,6 @@
           "last_character_index": 12230
         },
         {
-          "file_path": "data/raw/vllm-0.10.1/setup.py",
-          "first_character_index": 2678,
-          "last_character_index": 4677
-        },
-        {
           "file_path": "data/raw/vllm-0.10.1/docs/contributing/incremental_build.md",
           "first_character_index": 7124,
           "last_character_index": 8351
@@ -2942,6 +2937,11 @@
           "file_path": "data/raw/vllm-0.10.1/docs/getting_started/installation/cpu.md",
           "first_character_index": 7310,
           "last_character_index": 9096
+        },
+        {
+          "file_path": "data/raw/vllm-0.10.1/docs/deployment/docker.md",
+          "first_character_index": 2676,
+          "last_character_index": 4397
         }
       ]
     },

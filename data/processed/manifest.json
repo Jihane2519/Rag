@@ -1,16 +1,12 @@
 {
-    "config": {
-        "max_chunk_size": 5000,
-        "overlap": 200
-    },
+    "max_chunk_size": 7000,
     "files": {
         "data/raw/vllm-0.10.1/find_cuda_init.py": "f47011a4fd4ac969185a6ed1942f295db255c0e77e9d65b71c02fa39f5f56344",
-        "data/raw/vllm-0.10.1/setup.py": "7933903f7c036eb9ce019aeb248f9a007f497ea50e95e0263cd50d9d04e7d9af",
         "data/raw/vllm-0.10.1/SECURITY.md": "9bc32b86c102e329d17f17ac5940ba83424049f4d30b50368da06fc86ce31bda",
         "data/raw/vllm-0.10.1/RELEASE.md": "e3a7ca7eab5d46daec6cc9b47dc8df144f279e0adcdf6e512da896b9961b649f",
         "data/raw/vllm-0.10.1/CONTRIBUTING.md": "b09acfaae68d14983004d2dbcba46b7c911b9518f09bc03a0d240ab24cab9c5c",
         "data/raw/vllm-0.10.1/CMakeLists.txt": "9b8fab3fa11ae38afd9ee1ae4af8d51ca1217bbf40e7017e5be98beab0f6376a",
-        "data/raw/vllm-0.10.1/use_existing_torch.py": "86ab0503ec47cfcce7a5e685b79f0c975de0a5a77b03741122b3ee60170b74c9",
+        "data/raw/vllm-0.10.1/use_existing_torch.py": "d8ba42af6d89f6fa09aae9019e57b89e67083572993f16f3e6179c6fd1e1c69f",
         "data/raw/vllm-0.10.1/README.md": "5e79c1d7f2ba08dab5be85c737c7a8b968d74b2e18bdfe4e5655a223401e4bd9",
         "data/raw/vllm-0.10.1/CODE_OF_CONDUCT.md": "28fb4ab6ba88ce8c2bcf56c565a8cb868cb2f8b04473fccc06324f0687a652fe",
         "data/raw/vllm-0.10.1/docs/README.md": "5b853c615e532e9dcf92e34fd32563a906a5e951bfc4ee2ae6fe2e799ab4f3fa",

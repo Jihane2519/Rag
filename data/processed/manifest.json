@@ -1,5 +1,5 @@
 {
-    "max_chunk_size": 7000,
+    "max_chunk_size": 2000,
     "files": {
         "data/raw/vllm-0.10.1/find_cuda_init.py": "f47011a4fd4ac969185a6ed1942f295db255c0e77e9d65b71c02fa39f5f56344",
         "data/raw/vllm-0.10.1/SECURITY.md": "9bc32b86c102e329d17f17ac5940ba83424049f4d30b50368da06fc86ce31bda",

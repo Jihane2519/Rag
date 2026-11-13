@@ -12,6 +12,7 @@ from src.loader import load_files
 from src.chunker import chunk_file
 from src.embedder import Embedder
 from pathlib import Path
+_index_cache = None
 
 
 def tokenize(text: str) -> list[str]:
@@ -39,6 +40,7 @@ def save_manifest(files: dict[str, str], max_chunk_size: int) -> None:
     manifest_path = f"{DATA_PROCESSED_PATH}/manifest.json"
     data = {"max_chunk_size": max_chunk_size, "files": files}
     with open(manifest_path, "w", encoding="utf-8") as f:
+        # Sérialisation dans un fichier (Disque)
         json.dump(data, f, indent=4)
 
 
@@ -92,6 +94,7 @@ def load_old_data() -> dict[str,list[tuple]]:
 
 
 def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
+    global _index_cache
     files: list[tuple[str, str]] = load_files(DATA_RAW_PATH)
     # files: list[tuple[str, str]] = load_files("data/test_empty")
     changed_files, deleted_files, new_manifest = detect_changes(
@@ -121,9 +124,27 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
             new_texts.append(text)
     if new_texts:
         all_embeddings.extend(Embedder().encode(new_texts))
+    # if not all_texts:
+    #     save_manifest(new_manifest, max_chunk_size)
+    #     _index_cache = None
+    #     print("No files to index. Keeping the existing index.")
+    #     return
     if not all_texts:
         save_manifest(new_manifest, max_chunk_size)
-        print("No files to index. Keeping the existing index.")
+        _index_cache = None
+
+        # Supprimer les anciens fichiers de l'index
+        for filename in (
+            "bm25.pkl",
+            "chunks.pkl",
+            "texts.pkl",
+            "embeddings.pkl"
+        ):
+            path = Path(DATA_PROCESSED_PATH) / filename
+            # supprime le fichier du disque
+            path.unlink(missing_ok=True)
+
+        print("Index is empty. Old index files removed.")
         return
     tokenized = [
         tokenize(text)
@@ -141,6 +162,7 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     bm25 = BM25Okapi(tokenized)
 
     os.makedirs(DATA_PROCESSED_PATH, exist_ok=True)
+    #  Écriture dans un fichier Disque
     with open(f"{DATA_PROCESSED_PATH}/bm25.pkl", "wb") as f:
         pickle.dump(bm25, f)
     with open(f"{DATA_PROCESSED_PATH}/chunks.pkl", "wb") as f:
@@ -150,6 +172,7 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     with open(f"{DATA_PROCESSED_PATH}/embeddings.pkl", "wb") as f:
         pickle.dump(embeddings, f)
     save_manifest(new_manifest, max_chunk_size)
+    _index_cache = None
     # print("Chunks:", len(all_chunks))
     # print("Texts:", len(all_texts))
     # print("Embeddings:", len(all_embeddings))
@@ -165,16 +188,37 @@ def load_index() -> tuple[
     list[str],
     np.ndarray
 ]:
+    global _index_cache
+     # Vérifier si l'index existe déjà dans le cache
+    if _index_cache is not None:
+        return _index_cache
+    required_files = (
+        "bm25.pkl",
+        "chunks.pkl",
+        "texts.pkl",
+        "embeddings.pkl"
+    )
+
+    for filename in required_files:
+        path = Path(DATA_PROCESSED_PATH) / filename
+        if not path.exists():
+            raise FileNotFoundError(
+                f"{filename} not found. Run build_index() first."
+            )
+     # Sinon, charger les fichiers depuis le disque
     with open(f"{DATA_PROCESSED_PATH}/bm25.pkl", "rb") as f:
         bm25 = pickle.load(f)
+        # load() chargement de l'objet en memoire RAM
+        # RAM(on l'utilise comme cache)
 
     with open(f"{DATA_PROCESSED_PATH}/chunks.pkl", "rb") as f:
         chunks: list[MinimalSource] = pickle.load(f)
-
+    # Lecture depuis un fichier (Disque)
     with open(f"{DATA_PROCESSED_PATH}/texts.pkl", "rb") as f:
         texts: list[str] = pickle.load(f)
 
     with open(f"{DATA_PROCESSED_PATH}/embeddings.pkl", "rb") as f:
         embeddings = pickle.load(f)
-
-    return bm25, chunks, texts, embeddings
+    # Sauvegarder l'index chargé dans le cache RAM
+    _index_cache = (bm25, chunks, texts, embeddings)
+    return _index_cache

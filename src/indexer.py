@@ -12,6 +12,8 @@ from src.loader import load_files
 from src.chunker import chunk_file
 from src.embedder import Embedder
 from pathlib import Path
+from src.cache import clear_query_cache
+from typing import Any, cast
 _index_cache = None
 
 
@@ -45,7 +47,7 @@ def save_manifest(files: dict[str, str], max_chunk_size: int) -> None:
 
 
 # Cette fonction récupère les anciens hashes.
-def load_manifest() -> dict:
+def load_manifest() -> dict[str, Any]:
     manifest_path = f"{DATA_PROCESSED_PATH}/manifest.json"
     if not os.path.exists(manifest_path):
         return {
@@ -53,7 +55,7 @@ def load_manifest() -> dict:
             "files": {}
         }
     with open(manifest_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        return cast(dict[str, Any], json.load(f))
 
 
 def detect_changes(
@@ -81,8 +83,7 @@ def detect_changes(
     return changed_files, deleted_files, new_manifest
 
 
-
-def load_old_data() -> dict[str,list[tuple]]:
+def load_old_data() -> dict[str, list[tuple]]:
     """Group old (chunk, text, embeddings) by file path."""
     if not (Path(DATA_PROCESSED_PATH) / "chunks.pkl").exists():
         return {}
@@ -118,7 +119,9 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     for path, content in tqdm(changed_files, desc="chunking_modified"):
         chunks = chunk_file(path, content, max_chunk_size)
         for chunk in chunks:
-            text = content[chunk.first_character_index:chunk.last_character_index]
+            text = content[
+                chunk.first_character_index:chunk.last_character_index
+            ]
             all_chunks.append(chunk)
             all_texts.append(text)
             new_texts.append(text)
@@ -132,6 +135,7 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     if not all_texts:
         save_manifest(new_manifest, max_chunk_size)
         _index_cache = None
+        clear_query_cache()
 
         # Supprimer les anciens fichiers de l'index
         for filename in (
@@ -140,9 +144,9 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
             "texts.pkl",
             "embeddings.pkl"
         ):
-            path = Path(DATA_PROCESSED_PATH) / filename
+            file_path = Path(DATA_PROCESSED_PATH) / filename
             # supprime le fichier du disque
-            path.unlink(missing_ok=True)
+            file_path.unlink(missing_ok=True)
 
         print("Index is empty. Old index files removed.")
         return
@@ -173,6 +177,7 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
         pickle.dump(embeddings, f)
     save_manifest(new_manifest, max_chunk_size)
     _index_cache = None
+    clear_query_cache()
     # print("Chunks:", len(all_chunks))
     # print("Texts:", len(all_texts))
     # print("Embeddings:", len(all_embeddings))
@@ -189,7 +194,7 @@ def load_index() -> tuple[
     np.ndarray
 ]:
     global _index_cache
-     # Vérifier si l'index existe déjà dans le cache
+    # Vérifier si l'index existe déjà dans le cache
     if _index_cache is not None:
         return _index_cache
     required_files = (
@@ -205,7 +210,7 @@ def load_index() -> tuple[
             raise FileNotFoundError(
                 f"{filename} not found. Run build_index() first."
             )
-     # Sinon, charger les fichiers depuis le disque
+    # Sinon, charger les fichiers depuis le disque
     with open(f"{DATA_PROCESSED_PATH}/bm25.pkl", "rb") as f:
         bm25 = pickle.load(f)
         # load() chargement de l'objet en memoire RAM

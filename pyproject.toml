@@ -11,6 +11,8 @@ dependencies = [
     "transformers",
     "torch",
     "sentence-transformers",  # pour le bonus embeddings
+    "fastapi",
+    "uvicorn[standard]",
 ]
 
 [dependency-groups]

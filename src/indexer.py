@@ -197,6 +197,7 @@ def load_index() -> tuple[
     # Vérifier si l'index existe déjà dans le cache
     if _index_cache is not None:
         return _index_cache
+    # print("Loading index from disk...")
     required_files = (
         "bm25.pkl",
         "chunks.pkl",
@@ -224,6 +225,6 @@ def load_index() -> tuple[
 
     with open(f"{DATA_PROCESSED_PATH}/embeddings.pkl", "rb") as f:
         embeddings = pickle.load(f)
-    # Sauvegarder l'index chargé dans le cache RAM
+    # Sauvegarder l'index charge dans le cache RAM
     _index_cache = (bm25, chunks, texts, embeddings)
     return _index_cache

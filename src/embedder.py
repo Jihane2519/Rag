@@ -18,5 +18,5 @@ class Embedder:
             texts,
             convert_to_numpy=True,
             normalize_embeddings=True,
-            show_progress_bar=True
+            show_progress_bar=False
         )

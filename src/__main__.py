@@ -37,8 +37,16 @@ class RAG:
             print("Error: query is empty")
             return
 
-        if k <= 0:
-            print("Error: k must be > 0")
+        # try:
+        #     if not isinstance(k, int):
+        #         raise TypeError
+        #     if k <= 0:
+        #         raise ValueError
+        # except (ValueError, TypeError):
+        #     print("Error: k must be a positive integer")
+        #     return
+        if not isinstance(k, int) or k <= 0:
+            print("Error: k must be a positive integer")
             return
 
         results = search_re(query, k)
@@ -61,6 +69,10 @@ class RAG:
             dataset = RagDataset(**data)
         except Exception as e:
             print(f"Error loading dataset: {e}")
+            return
+
+        if not isinstance(k, int) or k <= 0:
+            print("Error: k must be a positive integer")
             return
 
         all_results: list[MinimalSearchResults] = []
@@ -105,8 +117,8 @@ class RAG:
             print("Error: query is empty")
             return
 
-        if k <= 0:
-            print("Error: k must be > 0")
+        if not isinstance(k, int) or k <= 0:
+            print("Error: k must be a positive integer")
             return
 
         _, all_chunks, texts, _ = load_index()

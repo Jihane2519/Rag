@@ -36,19 +36,12 @@ class RAG:
         if not query:
             print("Error: query is empty")
             return
-
-        # try:
-        #     if not isinstance(k, int):
-        #         raise TypeError
-        #     if k <= 0:
-        #         raise ValueError
-        # except (ValueError, TypeError):
-        #     print("Error: k must be a positive integer")
-        #     return
         if not isinstance(k, int) or k <= 0:
             print("Error: k must be a positive integer")
             return
-
+        if not query.strip():
+            print("query must not be empty")
+            return
         results = search_re(query, k)
 
         for r in results:
@@ -67,6 +60,8 @@ class RAG:
             with open(dataset_path, "r") as f:
                 data = json.load(f)
             dataset = RagDataset(**data)
+            if not dataset.rag_questions:
+                raise ValueError("Error: dataset is empty")
         except Exception as e:
             print(f"Error loading dataset: {e}")
             return
@@ -87,6 +82,9 @@ class RAG:
         embedder = Embedder()
 
         for q in tqdm(dataset.rag_questions, desc="Searching questions"):
+            if not q.question.strip():
+                print(f"Skipping empty question: {q.question_id}")
+                continue
             sources = search_re(q.question, k, embedder, index)
 
             all_results.append(
@@ -113,7 +111,7 @@ class RAG:
         print(f"Saved student_search_results to {save_path}")
 
     def answer(self, query: str, k: int = 5) -> None:
-        if not query:
+        if not query.strip():
             print("Error: query is empty")
             return
 
@@ -165,6 +163,9 @@ class RAG:
         for result in tqdm(
             search_results.search_results, desc="Generating answers"
         ):
+            if not result.question.strip():
+                print(f"Skipping empty question: {result.question_id}")
+                continue
             ans = generator.generate_answer(
                 result.question,
                 result.retrieved_sources,

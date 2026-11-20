@@ -127,11 +127,6 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
             new_texts.append(text)
     if new_texts:
         all_embeddings.extend(Embedder().encode(new_texts))
-    # if not all_texts:
-    #     save_manifest(new_manifest, max_chunk_size)
-    #     _index_cache = None
-    #     print("No files to index. Keeping the existing index.")
-    #     return
     if not all_texts:
         save_manifest(new_manifest, max_chunk_size)
         _index_cache = None
@@ -160,7 +155,7 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     )
 
     assert len(all_chunks) == len(all_texts) == len(embeddings), (
-        "Mismatch between chunks, texts and embeddings!"
+        "Mismatch between chunks, texts and embeddings"
     )
 
     bm25 = BM25Okapi(tokenized)

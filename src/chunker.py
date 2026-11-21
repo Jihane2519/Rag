@@ -16,6 +16,21 @@ def chunk_file(
     max_size: int = DEFAULT_CHUNK_SIZE,
     overlap: int = DEFAULT_OVERLAP,
 ) -> list[MinimalSource]:
+    """Split a file into chunks and return their source positions.
+
+    Selects a splitter based on the file extension and verifies
+    that each chunk matches its corresponding content in the original file.
+
+    Args:
+        file_path: Path of the file to split.
+        content: Original content of the file.
+        max_size: Maximum size of each chunk.
+        overlap: Number of overlapping characters between chunks.
+
+    Returns:
+        A list of MinimalSource objects containing file paths
+        and character positions.
+    """
     if max_size <= 0:
         raise ValueError("max_size doit être supérieur à 0")
 

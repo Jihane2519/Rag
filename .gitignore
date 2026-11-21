@@ -1,0 +1,40 @@
+# Virtual environments
+.venv/
+
+# IDE
+.vscode/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Tests and type checking
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Data
+data/raw/
+data/datasets/
+data/processed/
+data/output/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Hugging Face cache
+.cache/
+huggingface/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+
+# Moulinette
+moulinette
+moulinette-ubuntu
+moulinette-fedora

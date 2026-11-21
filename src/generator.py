@@ -12,9 +12,10 @@ from src.config import MODEL_NAME
 
 
 class Generator:
-    """Gère le chargement et l'utilisation du modèle Qwen3."""
+    """Load and use the Qwen3 language model."""
 
     def __init__(self) -> None:
+        """Load the tokenizer and pre-trained language model."""
         print(f"Loading model {MODEL_NAME}")
 
         self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
@@ -33,6 +34,17 @@ class Generator:
         texts: list[str],
         all_chunks: list[MinimalSource]
     ) -> str:
+        """Generate an answer to a question using retrieved context.
+
+        Args:
+            question: The user's question.
+            chunks: Retrieved source chunks relevant to the question.
+            texts: Text content of all indexed chunks.
+            all_chunks: Metadata for all indexed chunks.
+
+        Returns:
+            The generated answer as a string.
+        """
         context_parts: list[str] = []
 
         for chunk in chunks:

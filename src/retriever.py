@@ -8,6 +8,14 @@ from src.cache import _query_cache
 
 
 def normalize_scores(scores: np.ndarray) -> np.ndarray:
+    """Normalize scores to the range [0, 1].
+
+    Args:
+        scores: NumPy array containing the original scores.
+
+    Returns:
+        A NumPy array of normalized scores.
+    """
     min_score = np.min(scores)
     max_score = np.max(scores)
 
@@ -30,6 +38,19 @@ def search_re(
         np.ndarray
     ] | None = None,
 ) -> list[MinimalSource]:
+    """Retrieve the most relevant source chunks using hybrid search.
+
+    Combines normalized BM25 and semantic similarity scores.
+
+    Args:
+        query: User's search query.
+        k: Maximum number of source chunks to retrieve.
+        embedder: Embedding model used to encode the query.
+        index: Preloaded index containing BM25, chunks, texts, and embeddings.
+
+    Returns:
+        A list of the top-k relevant source chunks.
+    """
     # global _query_cache
     if (query, k) in _query_cache:
         # print("\nCACHE HIT")

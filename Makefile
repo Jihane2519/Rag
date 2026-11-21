@@ -1,8 +1,13 @@
+export HF_HOME=/goinfre/jbounou/.cache/huggingface
+export UV_CACHE_DIR=/goinfre/$USER/.cache/uv
+
+ARG ?= Haha
+
 install:
 	uv sync
 
 run:
-	uv run python -m src
+	uv run python -m src $(ARG)
 
 debug:
 	uv run python -m pdb -m src

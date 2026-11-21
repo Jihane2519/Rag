@@ -10,6 +10,7 @@ dependencies = [
     "fire",
     "transformers",
     "torch",
+    "numpy",
     "sentence-transformers",  # pour le bonus embeddings
     "fastapi",
     "uvicorn[standard]",

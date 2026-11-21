@@ -20,7 +20,7 @@ from src.models import (
 
 
 class RAG:
-    """CLI principal du système RAG."""
+    """Main CLI for the RAG system."""
 
     def index(self, max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
         """
@@ -33,6 +33,12 @@ class RAG:
         # clear_query_cache()
 
     def search(self, query: str, k: int = 5) -> None:
+        """Search for the most relevant chunks for a given query.
+
+        Args:
+            query: The user's search query.
+            k: Maximum number of results to retrieve.
+        """
         if not query:
             print("Error: query is empty")
             return
@@ -56,6 +62,15 @@ class RAG:
         k: int = 5,
         save_directory: str = "data/output/search_results"
     ) -> None:
+        """Retrieve relevant sources for each question in a dataset.
+
+        Save the search results as a JSON file.
+
+        Args:
+            dataset_path: Path to the input dataset JSON file.
+            k: Maximum number of sources to retrieve per question.
+            save_directory: Directory where the results are saved.
+        """
         try:
             with open(dataset_path, "r") as f:
                 data = json.load(f)
@@ -111,6 +126,12 @@ class RAG:
         print(f"Saved student_search_results to {save_path}")
 
     def answer(self, query: str, k: int = 5) -> None:
+        """Generate an answer using the most relevant retrieved chunks.
+
+        Args:
+            query: The user's question.
+            k: Maximum number of sources to retrieve.
+        """
         if not query.strip():
             print("Error: query is empty")
             return

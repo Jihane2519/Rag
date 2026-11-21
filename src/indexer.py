@@ -48,6 +48,11 @@ def save_manifest(files: dict[str, str], max_chunk_size: int) -> None:
 
 # Cette fonction récupère les anciens hashes.
 def load_manifest() -> dict[str, Any]:
+    """Load the previous indexing manifest from disk.
+
+    Returns:
+        A dictionary containing the previous chunk size and file hashes.
+    """
     manifest_path = f"{DATA_PROCESSED_PATH}/manifest.json"
     if not os.path.exists(manifest_path):
         return {
@@ -63,6 +68,17 @@ def detect_changes(
     old_manifest: dict,
     max_chunk_size: int,
 ) -> tuple[list[tuple[str, str]], list[str], dict[str, str]]:
+    """Detect new, modified, and deleted files since the last indexing.
+
+    Args:
+        files: Current files and their contents.
+        old_manifest: Manifest from the previous indexing.
+        max_chunk_size: Maximum size of each chunk.
+
+    Returns:
+        A tuple containing the files to reprocess, deleted file paths,
+        and the updated file hash manifest.
+    """
     new_manifest = {}
     changed_files = []
     old_files = old_manifest["files"]
@@ -95,6 +111,14 @@ def load_old_data() -> dict[str, list[tuple]]:
 
 
 def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
+    """Build or update the RAG index using the source files.
+
+    Reprocesses only new or modified files, removes deleted files,
+    generates embeddings, and saves the updated index to disk.
+
+    Args:
+        max_chunk_size: Maximum size of each chunk.
+    """
     global _index_cache
     files: list[tuple[str, str]] = load_files(DATA_RAW_PATH)
     # files: list[tuple[str, str]] = load_files("data/test_empty")
@@ -188,6 +212,15 @@ def load_index() -> tuple[
     list[str],
     np.ndarray
 ]:
+    """Load the RAG index from memory cache or disk.
+
+    Returns:
+        A tuple containing the BM25 index, source chunks,
+        chunk texts, and their embedding vectors.
+
+    Raises:
+        FileNotFoundError: If a required index file is missing.
+    """
     global _index_cache
     # Vérifier si l'index existe déjà dans le cache
     if _index_cache is not None:

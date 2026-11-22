@@ -23,6 +23,12 @@ dev = [
     "types-tqdm",
 ]
 
+[tool.mypy]
+
+[[tool.mypy.overrides]]
+module = ["rank_bm25", "fire"]
+ignore_missing_imports = true
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

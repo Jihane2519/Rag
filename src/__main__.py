@@ -1,8 +1,12 @@
-
 import json
 import os
 from tqdm import tqdm
+# from typing import TYPE_CHECKING
+
+# if TYPE_CHECKING:
 import fire
+# else:
+#     import fire
 
 from src.retriever import search_re
 from src.indexer import build_index, load_index
@@ -307,4 +311,8 @@ class RAG:
 
 
 if __name__ == "__main__":
-    fire.Fire(RAG)
+    try:
+        fire.Fire(RAG)
+    except KeyboardInterrupt:
+        print("\nOperation interrupted by user.")
+        raise SystemExit(130)

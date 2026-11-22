@@ -1,6 +1,5 @@
 import numpy as np
 from rank_bm25 import BM25Okapi
-
 from src.embedder import Embedder
 from src.models import MinimalSource
 from src.indexer import load_index, tokenize

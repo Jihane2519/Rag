@@ -5,6 +5,7 @@ from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     BatchEncoding,
+    PreTrainedModel,
 )
 
 from src.models import MinimalSource
@@ -19,11 +20,12 @@ class Generator:
         print(f"Loading model {MODEL_NAME}")
 
         self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-        self.model = AutoModelForCausalLM.from_pretrained(
+        self.model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
             MODEL_NAME,
             dtype=torch.float32
         )
-        self.model.eval()
+        # self.model.eval()
+        self.model.train(False)
 
         print("Model loaded!")
 

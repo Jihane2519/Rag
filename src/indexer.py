@@ -65,7 +65,7 @@ def load_manifest() -> dict[str, Any]:
 
 def detect_changes(
     files: list[tuple[str, str]],
-    old_manifest: dict,
+    old_manifest: dict[str, Any],
     max_chunk_size: int,
 ) -> tuple[list[tuple[str, str]], list[str], dict[str, str]]:
     """Detect new, modified, and deleted files since the last indexing.
@@ -99,12 +99,12 @@ def detect_changes(
     return changed_files, deleted_files, new_manifest
 
 
-def load_old_data() -> dict[str, list[tuple]]:
+def load_old_data() -> dict[str, list[tuple[MinimalSource, str, np.ndarray]]]:
     """Group old (chunk, text, embeddings) by file path."""
     if not (Path(DATA_PROCESSED_PATH) / "chunks.pkl").exists():
         return {}
     _, chunks, texts, embeddings = load_index()
-    old_data: dict[str, list[tuple]] = {}
+    old_data: dict[str, list[tuple[MinimalSource, str, np.ndarray]]] = {}
     for chunk, text, emb in zip(chunks, texts, embeddings):
         old_data.setdefault(chunk.file_path, []).append((chunk, text, emb))
     return old_data
@@ -127,7 +127,7 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
     )
     all_chunks: list[MinimalSource] = []
     all_texts: list[str] = []
-    all_embeddings: list = []
+    all_embeddings: list[np.ndarray] = []
     skip = {path for path, _ in changed_files} | set(deleted_files)
     # restorer the old files qui ne sont pas changer
     for path, data in load_old_data().items():
@@ -139,7 +139,7 @@ def build_index(max_chunk_size: int = DEFAULT_CHUNK_SIZE) -> None:
             all_texts.append(text)
             all_embeddings.append(emb)
     # rechunker les files qui sont modifier
-    new_texts: list = []
+    new_texts: list[str] = []
     for path, content in tqdm(changed_files, desc="chunking_modified"):
         chunks = chunk_file(path, content, max_chunk_size)
         for chunk in chunks:

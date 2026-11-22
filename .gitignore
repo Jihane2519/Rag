@@ -1,3 +1,4 @@
+
 # Virtual environments
 .venv/
 
@@ -35,6 +36,6 @@ huggingface/
 *.temp
 
 # Moulinette
-moulinette
-moulinette-ubuntu
-moulinette-fedora
+/moulinette
+/moulinette-ubuntu
+/moulinette-fedora

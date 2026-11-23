@@ -316,3 +316,9 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nOperation interrupted by user.")
         raise SystemExit(130)
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        raise SystemExit(1)
+    except (OSError, ValueError) as e:
+        print(f"Error: {e}")
+        raise SystemExit(1)
